@@ -1,5 +1,4 @@
-![1](https://github.com/user-attachments/assets/f99f132c-71b5-418f-88d8-30373571ef83)
-![2](https://github.com/user-attachments/assets/44cebfa0-75fe-44a4-bb6e-2b250b609e1c)
+
 # Credit Card Validator System
 
 ## Overview
