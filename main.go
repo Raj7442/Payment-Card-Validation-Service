@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"regexp"
+	"time"
+	"sync"
 )
 
 func luhnAlgorithm(cardNumber string) bool {
@@ -27,31 +31,59 @@ func luhnAlgorithm(cardNumber string) bool {
 	return sum%10 == 0
 }
 
-func main() {
-	http.HandleFunc("/validate", validateCardHandler)
-	fmt.Println("Server is running on port 8080")
-	http.ListenAndServe(":8080", nil)
-}
+var (
+	validationCount int64
+	validCards      int64
+	mutex          sync.RWMutex
+	startTime      = time.Now()
+	rateLimit      = make(map[string][]time.Time)
+	rateMutex      sync.RWMutex
+)
 
 type RequestPayload struct {
 	CardNumber string `json:"card_number"`
 }
 
 type ResponsePayload struct {
-	Valid bool `json:"valid"`
+	Valid bool   `json:"valid"`
+	Brand string `json:"brand"`
+	Type  string `json:"type"`
+}
+
+func main() {
+	http.HandleFunc("/validate", corsHandler(rateLimitHandler(validateCardHandler)))
+	http.HandleFunc("/health", corsHandler(healthHandler))
+	http.HandleFunc("/metrics", corsHandler(metricsHandler))
+	http.HandleFunc("/manifest.json", corsHandler(serveManifest))
+	http.HandleFunc("/", corsHandler(serveStatic))
+	fmt.Println("Server is running on port 8080")
+	http.ListenAndServe(":8080", nil)
+}
+
+func corsHandler(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == "OPTIONS" {
+			return
+		}
+		next(w, r)
+	}
+}
+
+func serveStatic(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "index.html")
 }
 
 func validateCardHandler(w http.ResponseWriter, r *http.Request) {
-	// Ensure the method is POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Set the response content type to application/json
 	w.Header().Set("Content-Type", "application/json")
 
-	// Decode JSON request
 	var payload RequestPayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil || len(payload.CardNumber) == 0 {
@@ -59,15 +91,110 @@ func validateCardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate the credit card number
-	isValid := luhnAlgorithm(payload.CardNumber)
+	cleanedNumber := strings.ReplaceAll(payload.CardNumber, " ", "")
+	
+	isValid := luhnAlgorithm(cleanedNumber)
+	brand := getCardBrand(cleanedNumber)
+	cardType := getCardType(cleanedNumber)
+	
+	mutex.Lock()
+	validationCount++
+	if isValid {
+		validCards++
+	}
+	mutex.Unlock()
 
-	// Create JSON response
-	response := ResponsePayload{Valid: isValid}
+	response := ResponsePayload{Valid: isValid, Brand: brand, Type: cardType}
 
-	// Send the JSON response
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func getCardBrand(cardNumber string) string {
+	patterns := map[string]*regexp.Regexp{
+		"Visa":       regexp.MustCompile(`^4[0-9]{12}(?:[0-9]{3})?$`),
+		"MasterCard": regexp.MustCompile(`^5[1-5][0-9]{14}$`),
+		"Amex":       regexp.MustCompile(`^3[47][0-9]{13}$`),
+		"Discover":   regexp.MustCompile(`^6(?:011|5[0-9]{2})[0-9]{12}$`),
+		"JCB":        regexp.MustCompile(`^(?:2131|1800|35\d{3})\d{11}$`),
+		"Diners":     regexp.MustCompile(`^3[0689][0-9]{13}$`),
+		"UnionPay":   regexp.MustCompile(`^(62|88)[0-9]{14,17}$`),
+		"Maestro":    regexp.MustCompile(`^(5018|5020|5038|6304|6759|6761|6763)[0-9]{8,15}$`),
+	}
+	
+	for brand, pattern := range patterns {
+		if pattern.MatchString(cardNumber) {
+			return brand
+		}
+	}
+	return "Unknown"
+}
+
+func getCardType(cardNumber string) string {
+	if len(cardNumber) >= 6 {
+		prefix := cardNumber[:6]
+		if strings.HasPrefix(prefix, "4") {
+			return "Credit"
+		}
+	}
+	return "Credit"
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	health := map[string]interface{}{
+		"status": "healthy",
+		"uptime": time.Since(startTime).String(),
+		"timestamp": time.Now().Format(time.RFC3339),
+	}
+	json.NewEncoder(w).Encode(health)
+}
+
+func metricsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	mutex.RLock()
+	metrics := map[string]interface{}{
+		"total_validations": validationCount,
+		"valid_cards": validCards,
+		"invalid_cards": validationCount - validCards,
+		"success_rate": float64(validCards) / float64(validationCount) * 100,
+		"uptime": time.Since(startTime).String(),
+	}
+	mutex.RUnlock()
+	json.NewEncoder(w).Encode(metrics)
+}
+
+func rateLimitHandler(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ip := r.RemoteAddr
+		now := time.Now()
+		
+		rateMutex.Lock()
+		requests := rateLimit[ip]
+		var recent []time.Time
+		for _, t := range requests {
+			if now.Sub(t) < time.Minute {
+				recent = append(recent, t)
+			}
+		}
+		
+		if len(recent) >= 60 {
+			rateMutex.Unlock()
+			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+			return
+		}
+		
+		recent = append(recent, now)
+		rateLimit[ip] = recent
+		rateMutex.Unlock()
+		
+		next(w, r)
+	}
+}
+
+func serveManifest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	http.ServeFile(w, r, "manifest.json")
 }

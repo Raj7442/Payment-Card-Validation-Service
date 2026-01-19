@@ -2,21 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2575fc">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Card Validator">
+  <link rel="manifest" href="manifest.json">
   <title>Credit Card Validator</title>
   <style>
+    /* Enhanced responsive design */
+    * {
+      box-sizing: border-box;
+    }
+    
     /* Body styling with a warm background color blend */
     body {
-      background: linear-gradient(135deg, #ff9a9e, #fad0c4); /* Warm color blend */
-      background-blend-mode: screen;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      background-attachment: fixed;
       font-family: 'Poppins', sans-serif;
       color: #333;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-      overflow: hidden;
+      padding: 10px;
+      transition: all 0.3s ease;
     }
 
     /* Page container styling */
@@ -88,13 +99,21 @@
     }
 
     .container {
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: clamp(20px, 5vw, 40px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       text-align: center;
-      max-width: 400px;
+      max-width: min(90vw, 450px);
       width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     h1 {
@@ -111,42 +130,89 @@
 
     input[type="text"] {
       width: 100%;
-      padding: 10px;
+      padding: 15px 20px;
       margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      font-size: 1.2em; 
+      border: 2px solid #e1e8ed;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      font-size: clamp(16px, 4vw, 18px);
       letter-spacing: 2px;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s ease;
+      background: linear-gradient(145deg, #f8f9fa, #ffffff);
     }
-
+    
     input[type="text"]:focus {
       border-color: #2575fc;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.1), 0 4px 20px rgba(0, 0, 0, 0.1);
       outline: none;
+      transform: translateY(-2px);
+    }
+    
+    input[type="text"].valid {
+      border-color: #28a745;
+      background: linear-gradient(145deg, #f8fff9, #ffffff);
+    }
+    
+    input[type="text"].invalid {
+      border-color: #dc3545;
+      background: linear-gradient(145deg, #fff8f8, #ffffff);
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
     }
 
-    input[type="submit"] {
-      background-color: #2575fc;
+    input[type="submit"], .button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: #fff;
-      padding: 10px 20px;
+      padding: 15px 30px;
       border: none;
-      border-radius: 5px;
+      border-radius: 12px;
       cursor: pointer;
-      font-size: 1.2em; 
+      font-size: clamp(14px, 3vw, 16px);
+      font-weight: 600;
+      margin: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    input[type="submit"]:before, .button:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    input[type="submit"] {
       opacity: 0;
       visibility: hidden;
-      transition: background-color 0.3s ease, transform 0.2s ease-in-out, opacity 0.3s ease, visibility 0.3s ease;
+      transform: translateY(10px);
     }
-
+    
     input[type="submit"].show {
       opacity: 1;
       visibility: visible;
+      transform: translateY(0);
     }
-
-    input[type="submit"]:hover {
-      background-color: #1b5dcc;
-      transform: scale(1.05);
+    
+    input[type="submit"]:hover, .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+    }
+    
+    input[type="submit"]:active, .button:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
     }
 
     #result {
@@ -171,7 +237,65 @@
       transform: scale(1.05);
     }
 
-    /* Responsive media query */
+    /* Dark theme */
+    body.dark {
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+    }
+    
+    body.dark .container {
+      background: #34495e;
+      color: #ecf0f1;
+    }
+    
+    body.dark input[type="text"] {
+      background: #2c3e50;
+      color: #ecf0f1;
+      border-color: #7f8c8d;
+    }
+    
+    .history-item {
+      background: #f8f9fa;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border-left: 4px solid #2575fc;
+    }
+    
+    .card-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .card-brand-icon {
+      position: absolute;
+      right: 15px;
+      font-size: 24px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .card-brand-icon.show {
+      opacity: 1;
+    }
+    
+    .card-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+    
+    .card-info.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
     @media (max-width: 600px) {
       .container {
         padding: 20px;
@@ -216,12 +340,45 @@
       <h1>Credit Card Validator</h1>
       <form id="cardForm">
         <label for="cardNumber">Enter Credit Card Number:</label>
-        <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNumber(this);">
+        <div class="card-input-container">
+          <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNumber(this);">
+          <div class="card-brand-icon" id="cardBrandIcon"></div>
+        </div>
+        <div class="card-info" id="cardInfo"></div>
         <input type="submit" value="Validate" id="validateButton">
       </form>
       <p id="result"></p>
       <div class="button-container">
         <button class="button" onclick="showHomePage()">Back</button>
+        <button class="button" onclick="showHistoryPage()">History</button>
+        <button class="button" onclick="showBatchPage()">Batch</button>
+        <button class="button" onclick="toggleTheme()">🌙 Theme</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch Validation Page -->
+  <div id="batch" class="page">
+    <div class="container">
+      <h1>Batch Validation</h1>
+      <textarea id="batchInput" placeholder="Enter card numbers (one per line)" rows="6" style="width:100%;padding:10px;border-radius:5px;border:1px solid #ddd;"></textarea>
+      <button class="button" onclick="validateBatch()" style="margin:10px 0;">Validate All</button>
+      <div id="batchResults"></div>
+      <div class="button-container">
+        <button class="button" onclick="showValidationPage()">Back</button>
+        <button class="button" onclick="exportResults()">Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Page -->
+  <div id="history" class="page">
+    <div class="container">
+      <h1>Validation History</h1>
+      <div id="historyList"></div>
+      <div class="button-container">
+        <button class="button" onclick="showValidationPage()">Back</button>
+        <button class="button" onclick="clearHistory()">Clear</button>
       </div>
     </div>
   </div>
@@ -229,26 +386,134 @@
   <script>
     function showValidationPage() {
       document.getElementById('home').classList.remove('active');
+      document.getElementById('history').classList.remove('active');
+      document.getElementById('batch').classList.remove('active');
       document.getElementById('validation').classList.add('active');
     }
 
     function showHomePage() {
       document.getElementById('validation').classList.remove('active');
+      document.getElementById('history').classList.remove('active');
+      document.getElementById('batch').classList.remove('active');
       document.getElementById('home').classList.add('active');
+    }
+    
+    function showHistoryPage() {
+      document.getElementById('validation').classList.remove('active');
+      document.getElementById('home').classList.remove('active');
+      document.getElementById('batch').classList.remove('active');
+      document.getElementById('history').classList.add('active');
+      loadHistory();
+    }
+    
+    function showBatchPage() {
+      document.getElementById('validation').classList.remove('active');
+      document.getElementById('home').classList.remove('active');
+      document.getElementById('history').classList.remove('active');
+      document.getElementById('batch').classList.add('active');
+    }
+    
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('darkTheme', document.body.classList.contains('dark'));
+    }
+    
+    function saveToHistory(cardNumber, result) {
+      const history = JSON.parse(localStorage.getItem('cardHistory') || '[]');
+      const maskedCard = cardNumber.replace(/.(?=.{4})/g, '*');
+      history.unshift({
+        card: maskedCard,
+        result: result,
+        timestamp: new Date().toLocaleString()
+      });
+      if (history.length > 10) history.pop();
+      localStorage.setItem('cardHistory', JSON.stringify(history));
+    }
+    
+    function loadHistory() {
+      const history = JSON.parse(localStorage.getItem('cardHistory') || '[]');
+      const historyList = document.getElementById('historyList');
+      if (history.length === 0) {
+        historyList.innerHTML = '<p>No validation history</p>';
+        return;
+      }
+      historyList.innerHTML = history.map(item => 
+        `<div class="history-item">
+          <strong>${item.card}</strong><br>
+          ${item.result}<br>
+          <small>${item.timestamp}</small>
+        </div>`
+      ).join('');
+    }
+    
+    function clearHistory() {
+      localStorage.removeItem('cardHistory');
+      loadHistory();
+    }
+    
+    // Load theme on startup
+    if (localStorage.getItem('darkTheme') === 'true') {
+      document.body.classList.add('dark');
     }
 
     function formatCardNumber(input) {
-      let cleaned = input.value.replace(/\D/g, '').slice(0, 16); 
-      let formatted = cleaned.match(/.{1,4}/g)?.join(' '); 
-      input.value = formatted ?? ''; 
+      let cleaned = input.value.replace(/\D/g, '').slice(0, 16);
+      let formatted = cleaned.match(/.{1,4}/g)?.join(' ');
+      input.value = formatted ?? '';
       
-
       const validateButton = document.getElementById('validateButton');
+      const cardInfo = document.getElementById('cardInfo');
+      const brandIcon = document.getElementById('cardBrandIcon');
+      
+      // Real-time brand detection
+      const brand = detectCardBrand(cleaned);
+      updateCardBrandIcon(brandIcon, brand);
+      
+      // Real-time validation feedback
+      if (cleaned.length >= 13) {
+        const isValid = validateCardNumber(input.value);
+        input.classList.toggle('valid', isValid);
+        input.classList.toggle('invalid', !isValid);
+        
+        if (brand !== 'Unknown') {
+          cardInfo.innerHTML = `${brand} • ${cleaned.length} digits`;
+          cardInfo.classList.add('show');
+        }
+      } else {
+        input.classList.remove('valid', 'invalid');
+        cardInfo.classList.remove('show');
+      }
+      
       if (cleaned.length === 16) {
         validateButton.classList.add('show');
       } else {
         validateButton.classList.remove('show');
       }
+    }
+    
+    function detectCardBrand(cardNumber) {
+      if (cardNumber.startsWith('4')) return 'Visa';
+      if (cardNumber.startsWith('5') || cardNumber.startsWith('2')) return 'MasterCard';
+      if (cardNumber.startsWith('34') || cardNumber.startsWith('37')) return 'Amex';
+      if (cardNumber.startsWith('6011') || cardNumber.startsWith('65')) return 'Discover';
+      if (cardNumber.startsWith('35')) return 'JCB';
+      if (cardNumber.startsWith('30') || cardNumber.startsWith('36') || cardNumber.startsWith('38')) return 'Diners';
+      if (cardNumber.startsWith('62') || cardNumber.startsWith('88')) return 'UnionPay';
+      if (cardNumber.startsWith('50') || cardNumber.startsWith('63') || cardNumber.startsWith('67')) return 'Maestro';
+      return 'Unknown';
+    }
+    
+    function updateCardBrandIcon(iconElement, brand) {
+      const icons = {
+        'Visa': '💳',
+        'MasterCard': '💳',
+        'Amex': '💳',
+        'Discover': '💳',
+        'Unknown': ''
+      };
+      
+      iconElement.textContent = icons[brand] || '';
+      iconElement.classList.toggle('show', brand !== 'Unknown');
     }
 
     function validateCardNumber(cardNumber) {
@@ -276,23 +541,331 @@
       return (sum % 10) === 0;
     }
 
-    document.getElementById('cardForm').addEventListener('submit', function(e) {
+    document.getElementById('cardForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const cardNumber = document.getElementById('cardNumber').value;
-
-      if (validateCardNumber(cardNumber)) {
-        document.getElementById('result').textContent = "Hooray! You have a valid card";
-        document.getElementById('result').style.color = "#28a745";
-      } else {
-        document.getElementById('result').textContent = "Oops!! Looks like your card's invalid";
-        document.getElementById('result').style.color = "#dc3545";
+      const resultElement = document.getElementById('result');
+      const validateButton = document.getElementById('validateButton');
+      
+      // Show loading state
+      validateButton.innerHTML = '<span class="spinner"></span>Validating...';
+      validateButton.disabled = true;
+      validateButton.classList.add('pulse');
+      resultElement.textContent = '';
+      resultElement.classList.remove('result-success', 'result-error');
+      
+      try {
+        const response = await fetch('http://localhost:8080/validate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ card_number: cardNumber })
+        });
+        
+        const data = await response.json();
+        
+        if (data.valid) {
+          const resultText = `✅ Valid ${data.brand} ${data.type} Card`;
+          resultElement.innerHTML = resultText;
+          resultElement.style.color = "#28a745";
+          resultElement.classList.add('result-success');
+          saveToHistory(cardNumber, resultText);
+        } else {
+          const resultText = "❌ Invalid Card Number";
+          resultElement.textContent = resultText;
+          resultElement.style.color = "#dc3545";
+          resultElement.classList.add('result-error');
+          saveToHistory(cardNumber, resultText);
+        }
+      } catch (error) {
+        resultElement.textContent = "⚠️ Server Error - Using offline validation";
+        resultElement.style.color = "#ffc107";
+        
+        // Fallback to client-side validation
+        if (validateCardNumber(cardNumber)) {
+          resultElement.textContent = "✅ Valid Card (Offline Check)";
+          resultElement.style.color = "#28a745";
+        } else {
+          resultElement.textContent = "❌ Invalid Card Number";
+          resultElement.style.color = "#dc3545";
+        }
+      } finally {
+        validateButton.innerHTML = 'Validate';
+        validateButton.disabled = false;
+        validateButton.classList.remove('pulse');
+        document.getElementById('cardNumber').value = '';
+        document.getElementById('validateButton').classList.remove('show');
+        document.getElementById('cardInfo').classList.remove('show');
+        document.getElementById('cardBrandIcon').classList.remove('show');
       }
-
-
-      document.getElementById('cardNumber').value = '';
-      document.getElementById('validateButton').classList.remove('show');
     });
   </script>
 </body>
 </html>
 
+    
+    async function validateBatch() {
+      const input = document.getElementById('batchInput').value;
+      const cards = input.split('\n').filter(card => card.trim());
+      const resultsDiv = document.getElementById('batchResults');
+      
+      if (cards.length === 0) {
+        resultsDiv.innerHTML = '<p>Please enter card numbers</p>';
+        return;
+      }
+      
+      resultsDiv.innerHTML = '<p>Validating...</p>';
+      const results = [];
+      
+      for (const card of cards) {
+        try {
+          const response = await fetch('http://localhost:8080/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_number: card.trim() })
+          });
+          const data = await response.json();
+          results.push({
+            card: card.trim(),
+            valid: data.valid,
+            brand: data.brand,
+            type: data.type
+          });
+        } catch (error) {
+          results.push({
+            card: card.trim(),
+            valid: false,
+            brand: 'Error',
+            type: 'N/A'
+          });
+        }
+      }
+      
+      window.batchResults = results;
+      displayBatchResults(results);
+    }
+    
+    function displayBatchResults(results) {
+      const resultsDiv = document.getElementById('batchResults');
+      const validCount = results.filter(r => r.valid).length;
+      
+      resultsDiv.innerHTML = `
+        <h3>Results: ${validCount}/${results.length} Valid</h3>
+        ${results.map(result => `
+          <div class="history-item">
+            <strong>${result.card.replace(/.(?=.{4})/g, '*')}</strong><br>
+            ${result.valid ? '✅' : '❌'} ${result.brand} ${result.type}
+          </div>
+        `).join('')}
+      `;
+    }
+    
+    function exportResults() {
+      if (!window.batchResults) {
+        alert('No results to export');
+        return;
+      }
+      
+      const csv = 'Card,Valid,Brand,Type\n' + 
+        window.batchResults.map(r => 
+          `${r.card.replace(/.(?=.{4})/g, '*')},${r.valid},${r.brand},${r.type}`
+        ).join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'validation_results.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    /* Enhanced responsive breakpoints */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+      
+      .container {
+        padding: 20px 15px;
+        border-radius: 15px;
+        margin: 10px;
+      }
+      
+      h1 {
+        font-size: clamp(1.8em, 6vw, 2.2em);
+        margin-bottom: 20px;
+      }
+      
+      #home h1 {
+        font-size: clamp(2.5em, 8vw, 3.5em);
+      }
+      
+      .button-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+      
+      .button {
+        flex: 1;
+        min-width: 120px;
+        max-width: 200px;
+      }
+      
+      input[type="text"] {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px 15px;
+      }
+      
+      #batchInput {
+        font-size: 16px;
+        padding: 12px;
+        border-radius: 8px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 15px 10px;
+        margin: 5px;
+      }
+      
+      .button-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .button {
+        margin: 5px 0;
+        padding: 12px 20px;
+      }
+      
+      .history-item {
+        padding: 8px;
+        margin: 8px 0;
+        font-size: 14px;
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .container {
+        max-width: 500px;
+        padding: 40px;
+      }
+    }
+    /* Loading spinner */
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid #ffffff;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Success/Error animations */
+    .result-success {
+      animation: bounceIn 0.6s ease-out;
+    }
+    
+    .result-error {
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes bounceIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Pulse effect for buttons */
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(37, 117, 252, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(37, 117, 252, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(37, 117, 252, 0); }
+    }
+    
+    // Touch gestures and keyboard shortcuts
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    document.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+    
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > swipeThreshold) {
+        const currentPage = document.querySelector('.page.active').id;
+        
+        if (diff > 0) { // Swipe left
+          if (currentPage === 'home') showValidationPage();
+          else if (currentPage === 'validation') showHistoryPage();
+          else if (currentPage === 'history') showBatchPage();
+        } else { // Swipe right
+          if (currentPage === 'batch') showHistoryPage();
+          else if (currentPage === 'history') showValidationPage();
+          else if (currentPage === 'validation') showHomePage();
+        }
+      }
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case '1': e.preventDefault(); showHomePage(); break;
+          case '2': e.preventDefault(); showValidationPage(); break;
+          case '3': e.preventDefault(); showHistoryPage(); break;
+          case '4': e.preventDefault(); showBatchPage(); break;
+          case 'd': e.preventDefault(); toggleTheme(); break;
+        }
+      }
+      
+      if (e.key === 'Escape') {
+        showHomePage();
+      }
+    });
+    
+    // Auto-focus on card input when validation page loads
+    function showValidationPage() {
+      document.getElementById('home').classList.remove('active');
+      document.getElementById('history').classList.remove('active');
+      document.getElementById('batch').classList.remove('active');
+      document.getElementById('validation').classList.add('active');
+      setTimeout(() => {
+        document.getElementById('cardNumber').focus();
+      }, 300);
+    }
+    
+    // Add ARIA labels and roles for accessibility
+    document.addEventListener('DOMContentLoaded', () => {
+      const cardInput = document.getElementById('cardNumber');
+      cardInput.setAttribute('aria-label', 'Credit card number input');
+      cardInput.setAttribute('aria-describedby', 'cardInfo');
+      
+      const resultElement = document.getElementById('result');
+      resultElement.setAttribute('role', 'status');
+      resultElement.setAttribute('aria-live', 'polite');
+    });
