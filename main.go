@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 	"sync"
+	"os"
 )
 
 func luhnAlgorithm(cardNumber string) bool {
@@ -51,13 +52,18 @@ type ResponsePayload struct {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	
 	http.HandleFunc("/validate", corsHandler(rateLimitHandler(validateCardHandler)))
 	http.HandleFunc("/health", corsHandler(healthHandler))
 	http.HandleFunc("/metrics", corsHandler(metricsHandler))
 	http.HandleFunc("/manifest.json", corsHandler(serveManifest))
 	http.HandleFunc("/", corsHandler(serveStatic))
-	fmt.Println("Server is running on port 8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server is running on port", port)
+	http.ListenAndServe(":"+port, nil)
 }
 
 func corsHandler(next http.HandlerFunc) http.HandlerFunc {
