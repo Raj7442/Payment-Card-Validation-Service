@@ -1,9 +1,7 @@
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-
+COPY go.mod ./
 COPY . .
 RUN go build -o main .
 
@@ -13,6 +11,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/main .
 COPY --from=builder /app/index.html .
+COPY --from=builder /app/manifest.json .
 
 EXPOSE 8080
 CMD ["./main"]
