@@ -1,3 +1,13 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+frontend/build/
+
 # Binaries
 *.exe
 *.exe~
@@ -10,14 +20,11 @@ card-validator
 # Test binary
 *.test
 
-# Output of the go coverage tool
+# Coverage
 *.out
 
-# Go workspace file
+# Go workspace
 go.work
-
-# Dependency directories
-vendor/
 
 # IDE
 .vscode/
@@ -32,7 +39,14 @@ Thumbs.db
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment variables
+# Environment
 .env
 .env.local
+
+# Package lock files (optional - remove if you want to commit them)
+package-lock.json
+frontend/package-lock.json
