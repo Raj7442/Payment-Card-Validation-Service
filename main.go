@@ -79,7 +79,12 @@ func corsHandler(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func serveStatic(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "index.html")
+	if r.URL.Path == "/" {
+		http.ServeFile(w, r, "static/index.html")
+	} else {
+		fs := http.FileServer(http.Dir("static"))
+		http.StripPrefix("/", fs).ServeHTTP(w, r)
+	}
 }
 
 func validateCardHandler(w http.ResponseWriter, r *http.Request) {
@@ -202,5 +207,5 @@ func rateLimitHandler(next http.HandlerFunc) http.HandlerFunc {
 
 func serveManifest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	http.ServeFile(w, r, "manifest.json")
+	http.ServeFile(w, r, "static/manifest.json")
 }
